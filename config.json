@@ -1,0 +1,15 @@
+{
+  "labs": {
+    "大兴": {
+      "name": "大兴",
+      "base_url": "https://api.physics-lims.com",
+      "token": "sk-phys-123456"
+    },
+    "恒洁": {
+      "name": "恒洁",
+      "base_sample_url": "http://hjwy.gd.labscare.com/api/web/report/getProjectSamples",
+      "base_project_url": "http://hjwy.gd.labscare.com/api/web/report/getProjectData",
+      "token": "a8f3eedff1244394b33d6acc871cd622"
+    }
+  }
+}

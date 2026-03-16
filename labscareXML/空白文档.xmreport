@@ -1,0 +1,107 @@
+<?xml version='1.0' encoding='utf-8'?>
+<template>
+	<version>2.0</version>
+	<data-bind _id="19CDAEF85A9-18BC61F453E">
+		<bind></bind>
+		<prepare-script></prepare-script>
+		<post-script></post-script>
+		<final-script></final-script>
+	</data-bind>
+	<pages>
+		<page>
+			<id>page1</id>
+			<labscare-datasource>
+				<template-type></template-type>
+				<case-group></case-group>
+				<template-id></template-id>
+			</labscare-datasource>
+			<paper>
+				<alias>A4</alias>
+				<width>2090</width>
+				<height>2960</height>
+			</paper>
+			<design-region>
+				<width>2090</width>
+				<height>2960</height>
+				<synchronize-paper-width>true</synchronize-paper-width>
+				<synchronize-paper-height>true</synchronize-paper-height>
+			</design-region>
+			<paper-orientation>portait</paper-orientation>
+			<page-padding>
+				<left>154</left>
+				<right>154</right>
+				<top>218</top>
+				<bottom>218</bottom>
+			</page-padding>
+			<economic-print>
+				<horizontal-economic>false</horizontal-economic>
+				<vertical-economic>false</vertical-economic>
+				<horizontal-gap>50</horizontal-gap>
+				<vertical-gap>50</vertical-gap>
+			</economic-print>
+			<background _id="19CDAEF85A9-60CAF38B54">
+				<type>TRANSPARENT</type>
+				<transparent>true</transparent>
+			</background>
+			<data-bind _ref="19CDAEF85A9-18BC61F453E"></data-bind>
+			<header>
+				<id>Header</id>
+				<parent-id>page1</parent-id>
+				<z-index>100</z-index>
+				<visible>true</visible>
+				<rotate>0</rotate>
+				<data-bind _ref="19CDAEF85A9-18BC61F453E"></data-bind>
+				<border _id="19CDAEF85A9-1BB87B392C">
+					<left></left>
+					<right></right>
+					<top></top>
+					<bottom></bottom>
+					<tr2bl></tr2bl>
+					<tl2br></tl2br>
+				</border>
+				<background _ref="19CDAEF85A9-60CAF38B54"></background>
+				<height>100</height>
+				<shrink>false</shrink>
+				<children></children>
+			</header>
+			<body>
+				<id>Body</id>
+				<parent-id>page1</parent-id>
+				<z-index>100</z-index>
+				<visible>true</visible>
+				<rotate>0</rotate>
+				<data-bind _ref="19CDAEF85A9-18BC61F453E"></data-bind>
+				<border _ref="19CDAEF85A9-1BB87B392C"></border>
+				<background _ref="19CDAEF85A9-60CAF38B54"></background>
+				<shrink>false</shrink>
+				<children></children>
+			</body>
+			<footer>
+				<id>Footer</id>
+				<parent-id>page1</parent-id>
+				<z-index>100</z-index>
+				<visible>true</visible>
+				<rotate>0</rotate>
+				<data-bind _ref="19CDAEF85A9-18BC61F453E"></data-bind>
+				<border _ref="19CDAEF85A9-1BB87B392C"></border>
+				<background _ref="19CDAEF85A9-60CAF38B54"></background>
+				<height>100</height>
+				<shrink>false</shrink>
+				<children></children>
+			</footer>
+		</page>
+	</pages>
+	<output-settings>
+		<word-settings>
+			<body-reserved-height>80</body-reserved-height>
+		</word-settings>
+		<pdf-settings>
+			<x-offset>0</x-offset>
+			<y-offset>0</y-offset>
+		</pdf-settings>
+	</output-settings>
+	<preview-data></preview-data>
+	<data-source-template>
+		<template-id></template-id>
+	</data-source-template>
+</template>

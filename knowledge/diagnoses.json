@@ -1,0 +1,64 @@
+{
+  "object Object": {
+    "causes": [
+      "下拉选择器字段直接用于 `${字段名}` 占位符，未提取 `.val`",
+      "模板内联 JS 中对数组类型字段调用了 `.val`，实际应该遍历",
+      "双层架构中 template 层和 page 层都需要处理 `.val`，但只处理了一处"
+    ],
+    "fixes": [
+      "方案1：脚本中统一遍历 formJs，自动提取所有带 .val 的字段：\n```javascript\nfor (var k in formJs) {\n    if (formJs[k] && typeof formJs[k] === 'object' && !Array.isArray(formJs[k]) && formJs[k].val !== undefined) {\n        formJs[k] = formJs[k].val;\n    }\n}\n```",
+      "方案2：逐字段处理已知下拉字段：`p_sbmc: lodashGet(formJs, ['p_sbmc', 'val'])`",
+      "方案3：模板占位符改为 `${t_jclb.val ? t_jclb.val : ''}` 内联三元"
+    ]
+  },
+  "复选框不显示": {
+    "causes": [
+      "模板内联 JS 使用了 `getCheckBox()`，但脚本没有 `set('getCheckBox', getCheckBox)`",
+      "脚本对被内联 JS 引用的字段做了 `.val` 提取，破坏了模板期望的数组结构",
+      "使用了预计算策略但模板占位符写的是 `${原字段名}` 而非 `${字段名_boxes}`"
+    ],
+    "fixes": [
+      "策略A（内联 JS）：脚本标准开头必须加 `set('getCheckBox', getCheckBox);`，且不能对内联 JS 引用的字段提取 .val",
+      "策略B（预计算）：脚本中用 `buildMultiCheckbox`/`buildSingleCheckbox` 生成 HTML 存入新字段，模板改为 `${字段名_boxes}`"
+    ]
+  },
+  "data区域只渲染一行": {
+    "causes": [
+      "<data> 绑定名与脚本返回对象的数组键名不匹配（最常见）",
+      "数组嵌套在父对象内部（如 sampleList[0].gaugingTableList），<data> 引擎无法穿透查找",
+      "脚本返回了空数组或 undefined"
+    ],
+    "fixes": [
+      "确认脚本返回对象顶层有与 <data> 绑定名完全一致的数组键：`{ tableData: [...] }`",
+      "将嵌套数组显式提取到顶层：`res.gaugingTableList = sample.gaugingTableList || []`",
+      "样品检测项目的标准绑定名是 `gaugingTableList`，自定义表格的绑定名需向用户确认"
+    ]
+  },
+  "签名图片不显示": {
+    "causes": [
+      "模板内联 JS 使用 signUrl 变量，但脚本没有 `set('signUrl', headerUrl)`",
+      "脚本预计算时 lodashGet 取的是 signUrl 而非 val（两者都可能存在，需确认）",
+      "图片 URL 中有中文未做 encodeURI 处理",
+      "签名字段为空数组 `[]`，未做空值保护"
+    ],
+    "fixes": [
+      "策略A：脚本加 `set('signUrl', headerUrl);`，保持签名字段为原始数组格式",
+      "策略B：`p_hc: headerUrl + (lodashGet(formJs, ['p_hc', 0, 'signUrl']) || '')`",
+      "模板内联 JS 标准写法：`str = signUrl + encodeURI(field[0].val)`"
+    ]
+  },
+  "脚本崩溃": {
+    "causes": [
+      "templateId / templateld 拼写混用（末尾大写I vs 小写l）",
+      "null 键未修复，JSON.parse 报错",
+      "访问了 undefined 的属性（如 sample.gaugingTableList 为 null）",
+      "ES6 语法（let/const/箭头函数/模板字符串）在老版本引擎中报错"
+    ],
+    "fixes": [
+      "检查所有 templateld 变量：声明用 `var templateId`，赋值和 .get() 用 `templateld`（小写l）",
+      "所有 JSON.parse 前必须 replace：`.replace(/null:/g, '\"null\":')`",
+      "访问嵌套属性前做空值保护：`var gtl = sample['gaugingTableList'] || [];`",
+      "将 let/const 改为 var，箭头函数改为 function(){} 写法"
+    ]
+  }
+}

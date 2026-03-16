@@ -1,0 +1,127 @@
+{
+  "script_header": {
+    "title": "脚本标准开头",
+    "code": "//javascript\nload(\"/tools.js\");\nset(\"exceptionMsgLengthLimit\", \"10000\");\nset(\"getCheckBox\", getCheckBox);   // 模板内联JS用到时必须\nset(\"formatDateCN\", formatDateCN); // 模板内联JS用到时必须\nset(\"signUrl\", headerUrl);         // 模板签名内联JS用到时必须\nvar helper = get(\"labscareHelper\");",
+    "note": "set() 多加无害，建议始终保留。"
+  },
+  "procedure_locator": {
+    "title": "定位流程/步骤（固定写法，照抄不改）",
+    "code": "var templateId = '';\nvar processId = '';\nfor (var i in procedures) {\n    if (i.indexOf('310') === 0) { processId = i; }\n}\nvar procedure = procedures.get(processId);\nif (procedure) {\n    for (var i in procedure.processes) {\n        if (i.indexOf('314') === 0) { templateld = i; }  // 末尾是小写L！\n    }\n}\nvar form = procedure.get('processes').get(templateld).get('form');\nvar formJs = JSON.parse(JSON.stringify(form).replace(/null:/g, '\"null\":'));",
+    "note": "templateld 末尾是小写L，绝对不能改为 templateId。"
+  },
+  "null_key_fix": {
+    "title": "null 键修复",
+    "code": "// 推荐写法（只替换键名）\nvar data = JSON.parse(JSON.stringify(raw).replace(/null:/g, '\"null\":'));\n\n// 样品\nsamples = JSON.parse(JSON.stringify(samples).replace(/null:/g, '\"null\":'));",
+    "note": "所有 helper.getXxx() 返回的数据在 JSON.parse 前必须修复。"
+  },
+  "lodash_get": {
+    "title": "lodashGet — 安全深层取值",
+    "code": "function lodashGet(object, path) {\n    if (object == null) return null;\n    var pathArray;\n    if (Array.isArray(path)) {\n        pathArray = path;\n    } else if (typeof path === \"string\") {\n        var pathStr = path\n            .replace(/\\[\"([^\"]+)\"\\]/g, \".$1\")\n            .replace(/\\['([^']+)'\\]/g, \".$1\")\n            .replace(/\\[([^\\]]+)\\]/g, \".$1\")\n            .replace(/^\\./, \"\");\n        pathArray = pathStr.split(\".\");\n        for (var i = 0; i < pathArray.length; i++) {\n            if (!isNaN(pathArray[i]) && pathArray[i] !== \"\") {\n                pathArray[i] = Number(pathArray[i]);\n            }\n        }\n    } else { pathArray = []; }\n    var result = object;\n    for (var j = 0; j < pathArray.length; j++) {\n        var key = pathArray[j];\n        if (result == null || result[key] === undefined) return null;\n        result = result[key];\n    }\n    return result !== undefined ? result : null;\n}\n\n// 使用\nlodashGet(formJs, [\"p_sbmc\", \"val\"])       // 下拉选择器\nlodashGet(formJs, [\"p_hc\", 0, \"signUrl\"]) // 签名数组",
+    "note": "在脚本中自行定义，tools.js 不提供。"
+  },
+  "signature_precompute": {
+    "title": "签名图片 — 策略B（脚本预计算）",
+    "code": "// 模板用 =字段名 嵌入图片\np_hc: headerUrl + (lodashGet(formJs, [\"p_hc\", 0, \"signUrl\"]) || \"\"),\np_sh: headerUrl + (lodashGet(formJs, [\"p_sh\", 0, \"signUrl\"]) || \"\"),\np_pz: headerUrl + (lodashGet(formJs, [\"p_pz\", 0, \"signUrl\"]) || \"\"),",
+    "note": "需先定义 lodashGet 函数。"
+  },
+  "signature_inline_js": {
+    "title": "签名图片 — 策略A（模板内联JS）",
+    "code": "// 脚本只需导出 signUrl，保持签名字段为原始数组\nset(\"signUrl\", headerUrl);\n// 脚本返回原始 formJs，不对签名字段做任何处理\n\n// 模板单元格中的内联JS写法：\n//javascript\nvar str = \"\"\nif(p_hc && p_hc.length>0){\n    str = signUrl+encodeURI(p_hc[0].val)\n}\nstr",
+    "note": "脚本不能对签名字段提取 [0].val，否则破坏模板期望的数组结构。"
+  },
+  "checkbox_yes_no": {
+    "title": "复选框 — 是/否模式",
+    "code": "var SPACER = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';\nvar labels = ['干净整洁', '计量标识', '合格证有效', '设备介绍牌'];\nvar keys   = ['p_gjzj',   'p_jlbs',   'p_hgzyx',   'p_sbjsp'];\n\nfunction getYesNoHTML(formData, keys, labels) {\n    var str = '';\n    keys.forEach(function(key, i) {\n        var val = formData[key] && formData[key].val ? formData[key].val : '';\n        str += getCheckBox(val === '是') + labels[i] + SPACER;\n    });\n    return str;\n}\n// 使用\nformJs['p_hcnr1'] = getYesNoHTML(formJs, keys, labels);\n// 模板占位符：${p_hcnr1}",
+    "note": ""
+  },
+  "checkbox_checked": {
+    "title": "复选框 — checked 属性模式",
+    "code": "// 适用于字段值是 [{val:'选项名', checked:'0'或'1'}, ...] 的情况\nfunction getCheckedHTML(arr) {\n    var str = '';\n    var SPACER = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';\n    arr.forEach(function(item) {\n        str += (item.checked === '0' ? getCheckBox(false) : getCheckBox(true))\n            + item.val + SPACER;\n    });\n    return str;\n}\n\n// 使用\nformJs['p_hcnr_boxes'] = getCheckedHTML(formJs['p_hcnr'] || []);",
+    "note": "'0' 表示未勾选，非 '0' 表示已勾选。"
+  },
+  "checkbox_type_mapping": {
+    "title": "复选框 — 类型映射匹配（样品标签水/气/土/固废）",
+    "code": "var SAMPLE_TYPE_MAPPINGS = {\n    '水': ['水质', '地表水', '地下水', '污水处理厂', '大气降水', '污染源废水'],\n    '气': ['大气', '大气污染物无组织排放', '大气无组织', '恶臭', '废气', '降尘'],\n    '土壤': ['土壤'],\n    '固废': ['固废']\n};\n\nfunction buildDetectionCheckboxes(typeMappings, templateName, separator) {\n    var sep = separator || '    ';\n    var selectedCategory = '';\n    if (templateName) {\n        for (var category in typeMappings) {\n            if (typeMappings[category].indexOf(templateName) > -1) {\n                selectedCategory = category; break;\n            }\n        }\n    }\n    var result = '';\n    var allTypes = Object.keys(typeMappings);\n    for (var i = 0; i < allTypes.length; i++) {\n        var type = allTypes[i];\n        result += type + getCheckBox(type === selectedCategory) + sep;\n    }\n    return result.trim();\n}\n\n// 使用\nvar templateName = sample[\"s.t_templateName\"] || \"\";\nrowData.detectionTypeCheckboxes = buildDetectionCheckboxes(SAMPLE_TYPE_MAPPINGS, templateName, '  ');",
+    "note": "根据样品模板名称匹配类型，不匹配时所有复选框均不勾选。"
+  },
+  "checkbox_multi_precompute": {
+    "title": "复选框 — 多选预计算（buildMultiCheckbox）",
+    "code": "var SPACER = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';\n\nfunction buildMultiCheckbox(fieldArr, optionList) {\n    var strVal = [];\n    optionList.forEach(function(e) {\n        var index = -1;\n        if (fieldArr && fieldArr.length > 0) {\n            for (var i = 0; i < fieldArr.length; i++) {\n                if (fieldArr[i].val && e.indexOf(fieldArr[i].val) > -1) { index = i; break; }\n            }\n        }\n        if (index > -1) {\n            strVal.push(getCheckBox(index + 1) + e + (fieldArr[index].val == \"其他\" ? fieldArr[index].valOther || \"\" : \"\"));\n        } else {\n            strVal.push(getCheckBox() + e);\n        }\n    });\n    return strVal.join(SPACER);\n}\n\n// 使用\nformJs['t_jylb_boxes'] = buildMultiCheckbox(formJs['t_jylb'], ['委托检验', '比对检验', '复检']);\n// 模板占位符：${t_jylb_boxes}",
+    "note": "fieldArr 是 [{val:'选项名', valOther:'补充'}, ...] 格式的多选字段。"
+  },
+  "checkbox_single_precompute": {
+    "title": "复选框 — 单选预计算（buildSingleCheckbox）",
+    "code": "function buildSingleCheckbox(fieldObj, optionList) {\n    var v = fieldObj && fieldObj.val ? fieldObj.val : '';\n    var SPACER = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';\n    return optionList.map(function(e) {\n        return (e === v ? getCheckBox(fieldObj.val) : getCheckBox()) + e;\n    }).join(SPACER);\n}\n\n// 使用\nformJs['t_zsyypcz_boxes'] = buildSingleCheckbox(formJs['t_zsyypcz'], ['退还客户', '我公司自行处置']);\n// 模板占位符：${t_zsyypcz_boxes}",
+    "note": "适用于 {val:'选中项'} 单选对象字段。"
+  },
+  "checkbox_option_precompute": {
+    "title": "复选框 — 单项独格（buildOptionCheckbox）",
+    "code": "function buildOptionCheckbox(fieldObj, optionName) {\n    var v = fieldObj && fieldObj.val ? fieldObj.val : '';\n    return (v === optionName ? getCheckBox(fieldObj.val) : getCheckBox()) + optionName;\n}\n\n// 使用（每个选项占一个格子）\nformJs['t_bglqfs_zq'] = buildOptionCheckbox(formJs['t_bglqfs'], '自取');\nformJs['t_bglqfs_yj'] = buildOptionCheckbox(formJs['t_bglqfs'], '邮寄');\n// 模板占位符：${t_bglqfs_zq}、${t_bglqfs_yj}",
+    "note": ""
+  },
+  "subtable_simple": {
+    "title": "子表格提取 — 简单映射",
+    "code": "function getTableData(form) {\n    var origin = form[\"3151663582128416900\"]; // 子表格组件ID\n    return origin.map(function(item, index) {\n        return {\n            index: (index + 1) + '',\n            p_bzrx1: item.p_bzrx1 || '',\n            p_zdyc:  item.p_zdyc  || '',\n            p_jg:    item.p_jg    || '',\n        };\n    });\n}\n// 使用\nvar returnData = Object.assign({}, formJs, { tableData: getTableData(formJs) });",
+    "note": "组件ID从模板配置中确认，键名与 <data> 绑定名必须一致。"
+  },
+  "subtable_padded": {
+    "title": "子表格提取 — 补齐最少行数",
+    "code": "function getTableData(form) {\n    var origin = form[\"3159551335743450304\"] || [];\n    var minRows = 10;\n    var count = origin.length < minRows ? minRows : origin.length;\n    var result = [];\n    for (var i = 0; i < count; i++) {\n        var row = origin[i];\n        if (row) {\n            row[\"index\"] = (i + 1) + '';\n        } else {\n            row = { index: '', p_col1: '', p_col2: '', p_col3: '' };\n        }\n        result.push(row);\n    }\n    return result;\n}",
+    "note": "空行的 index 设为 '' 而不是数字，避免显示多余序号。"
+  },
+  "object_assign": {
+    "title": "Object.assign 数据组装",
+    "code": "var returnData = Object.assign({}, formJs, {\n    // 字段回退\n    p_jzrq: formJs[\"p_jzrq\"] || formJs[\"3155667476267100710\"],\n    // 下拉取值\n    p_sbmc: lodashGet(formJs, [\"p_sbmc\", \"val\"]),\n    // 复选框\n    p_hcnr1: getYesNoHTML(formJs, keys, labels),\n    // 签名\n    p_hc: headerUrl + lodashGet(formJs, [\"p_hc\", 0, \"signUrl\"]),\n    // 子表格\n    tableData: getTableData(formJs),\n});\nreturnData;",
+    "note": "Object.assign 第一个参数 {} 保证不修改原始 formJs。"
+  },
+  "field_fallback": {
+    "title": "字段回退取值",
+    "code": "// 优先标签名，回退到数字组件ID\np_jzrq: formJs[\"p_jzrq\"] || formJs[\"3155667476267100710\"]",
+    "note": ""
+  },
+  "factor_names_join": {
+    "title": "检测项目名称拼接",
+    "code": "var factorNames = [];\nvar gaugingTableList = sample[\"gaugingTableList\"] || [];\nfor (var j = 0; j < gaugingTableList.length; j++) {\n    var item = gaugingTableList[j];\n    if (item && item[\"factorName\"] && item[\"factorName\"].trim() !== \"\") {\n        factorNames.push(item[\"factorName\"].trim());\n    }\n}\nvar result = factorNames.join(\"、\");",
+    "note": ""
+  },
+  "filter_terminated": {
+    "title": "过滤终止样品",
+    "code": "for (var i = 0; i < samples.length; i++) {\n    var sample = samples[i];\n    if (sample[\"s_zhongzhi\"] === \"是\") { continue; }\n    // ... 后续处理\n}",
+    "note": "遍历样品时必须加此过滤，否则终止样品也会出现在报表中。"
+  },
+  "retest_condition": {
+    "title": "复测条件判断（固定搭配）",
+    "code": "// 判断是否使用复测数据（固定搭配，不可拆分）\nvar isRetest = item.t_sffc && item.t_sffc.val === '是'\n    && item.t_bgtqjg && item.t_bgtqjg.val === '复测结果';\n\n// 实测值\nvar scz  = isRetest ? item.t_fcz  : item.t_scz;\nvar unit = isRetest ? item.t_fczdw : item.t_sczdw;\n\n// 单项判定\nvar dxpd = isRetest\n    ? (item.t_fcdxpd && item.t_fcdxpd.val || '')\n    : (item.t_dxpd   && item.t_dxpd.val   || '');\n\n// 签名\nvar signVal = isRetest\n    ? (item.t_fcqz && item.t_fcqz.length > 0 ? item.t_fcqz[0].val : '')\n    : (item.t_scqz && item.t_scqz.length > 0 ? item.t_scqz[0].val : '');",
+    "note": "t_sffc 和 t_bgtqjg 必须同时判断，缺一不可。"
+  },
+  "standard_indicator": {
+    "title": "标准指标格式化（≥/≤拼接）",
+    "code": "function getStandardIndicator(item) {\n    if (item.t_zxyxx) {\n        var lower = item.t_zxyxx;\n        if (!isNaN(parseFloat(lower)) && !/[\\u4e00-\\u9fa5]/.test(lower)) lower = '≥' + lower;\n        if (item.t_zdyxx) {\n            var upper = item.t_zdyxx;\n            if (!isNaN(parseFloat(upper)) && !/[\\u4e00-\\u9fa5]/.test(upper)) upper = '≤' + upper;\n            return lower + '-' + upper;\n        }\n        return lower;\n    }\n    if (item.t_zdyxx) {\n        var upper = item.t_zdyxx;\n        if (!isNaN(parseFloat(upper)) && !/[\\u4e00-\\u9fa5]/.test(upper)) return '≤' + upper;\n        return upper;\n    }\n    return '/';\n}",
+    "note": "含中文的值（如 '不超过2mg'）不加 ≤ 前缀，直接原文输出。"
+  },
+  "report_number": {
+    "title": "报告编号构造（前缀映射+截取）",
+    "code": "var prefix = '';\nif (form.t_yplb) {\n    switch(form.t_yplb.val) {\n        case \"JXHXSP\": prefix = 'BGS'; break;\n        case \"JXHXBJ\": prefix = 'BGB'; break;\n        case \"JXHXYP\": prefix = 'BGY'; break;\n        case \"WTSP\":   prefix = 'NBGS'; break;\n        case \"WTYP\":   prefix = 'NBGY'; break;\n    }\n}\n// 取样品编号后8位拼接\nresultArr.t_wtdbh = prefix + resultArr.t_ypbh.slice(-8);",
+    "note": "前缀映射规则因客户而异，需根据实际业务调整。"
+  },
+  "dynamic_columns": {
+    "title": "动态列解析（t_jyjg_ 前缀系统）",
+    "code": "var tagPrefix = \"t_jyjg_\";\n\nsample.gaugingTableList.forEach(function(gaugingTable) {\n    var arrayKey = Object.keys(gaugingTable).filter(function(k) {\n        return k.indexOf(tagPrefix) === 0;\n    });\n\n    arrayKey.forEach(function(key) {\n        var rows = gaugingTable[key];\n        if (!rows || !rows.length) return;\n\n        var titleSuffix = key + \"_1\";\n        var titles = [];\n        rows.forEach(function(row) {\n            if (row[titleSuffix] && titles.indexOf(row[titleSuffix]) === -1)\n                titles.push(row[titleSuffix]);\n        });\n        var maxCount = titles.length;\n\n        rows.forEach(function(row) {\n            var dataValues = [];\n            for (var col = 2; col < maxCount + 2; col++) {\n                dataValues.push(row[key + \"_\" + col] || \"\");\n            }\n        });\n    });\n});",
+    "note": "需配合 splitKeyList + gaugingArray 结构，详见 examples.md 示例7。"
+  },
+  "sign_dedup_group": {
+    "title": "签名去重与分组（每N个一组）",
+    "code": "var signArr = [];\ngaugingTableList.forEach(function(item) {\n    var url = headerUrl + (item.t_scqz && item.t_scqz.length > 0 ? item.t_scqz[0].val : '');\n    if (url.indexOf('user') > -1) signArr.push(url);\n});\n\nfunction noRepeat(arr) {\n    var newArr = [];\n    for (var i = 0; i < arr.length; i++) {\n        if (newArr.indexOf(arr[i]) === -1) newArr.push(arr[i]);\n    }\n    return newArr;\n}\nsignArr = noRepeat(signArr);\n\nvar grouped = [];\nfor (var i = 0; i < signArr.length; i += 4) {\n    grouped.push({\n        url1: signArr[i]   || '',\n        url2: signArr[i+1] || '',\n        url3: signArr[i+2] || '',\n        url4: signArr[i+3] || ''\n    });\n}",
+    "note": "将 4 改为其他数字可调整每组签名数。"
+  },
+  "safe_val": {
+    "title": "safeVal — 安全提取字段值",
+    "code": "function safeVal(field) {\n    if (field === null || field === undefined) return \"\";\n    if (typeof field === \"object\" && !Array.isArray(field) && field.val !== undefined) {\n        return field.val;\n    }\n    return field;\n}\n\n// 统一遍历（推荐，一劳永逸）\nfor (var k in formJs) {\n    if (formJs[k] && typeof formJs[k] === 'object'\n        && !Array.isArray(formJs[k])\n        && formJs[k].val !== undefined) {\n        formJs[k] = formJs[k].val;\n    }\n}",
+    "note": "统一遍历后，被内联 JS 引用的字段不能再提前提取 .val。"
+  },
+  "get_scz": {
+    "title": "getSCZ — 实测值格式化（含定量限标注）",
+    "code": "function getSCZ(str, unit, data) {\n    var unitStr = \"\";\n    if (unit && typeof unit !== 'string' && Object.keys(unit).length > 0) {\n        unitStr = unit.val || '';\n    } else {\n        unitStr = unit || '';\n    }\n    var newStr = str || '/';\n    var t_dlxbz = data.t_dlxbz || '';\n    var t_ffjcx = data.t_ffjcx || '';\n    var t_jcxdw = data.t_jcxdw && data.t_jcxdw.val || data.t_jcxdw || '';\n\n    if (str !== '/' && str !== \"未检出\") {\n        return newStr;\n    } else {\n        if (t_dlxbz && str !== '/') {\n            return newStr + '(' + t_dlxbz + ':' + t_ffjcx + t_jcxdw + ')';\n        }\n        return newStr;\n    }\n}",
+    "note": "str 为 '未检出' 时会附加定量限标注；'/' 表示未填写。"
+  }
+}
