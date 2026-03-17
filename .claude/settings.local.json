@@ -29,7 +29,13 @@
       "Bash(python -c \"from docx_to_xmreport import DocxParser; p=DocxParser\\(r''D:\\\\rocky-work\\\\labscare-script-mcp\\\\labscareXML\\\\example.docx''\\); imgs=p._extract_header_images\\(\\); print\\(len\\(imgs\\)\\); print\\([i[:30] for i in imgs]\\)\")",
       "Bash(python -c \"import xml.etree.ElementTree as ET, collections;a=r''D:\\\\rocky-work\\\\labscare-script-mcp\\\\labscareXML\\\\out_from_doc.xmreport'';b=r''D:\\\\rocky-work\\\\labscare-script-mcp\\\\labscareXML\\\\HG-QC-ELC-0005-08V1.0检测报告.xmreport'';\n\ndef stats\\(p\\):\n t=ET.parse\\(p\\).getroot\\(\\); c=collections.Counter\\(e.tag for e in t.iter\\(\\)\\);\n return {''pages'':c[''page''],''grid'':c[''grid''],''row'':c[''row''],''cell'':c[''cell''],''text'':c[''text''],''image'':c[''image''],''bind_nonempty'':sum\\(1 for e in t.iter\\(''bind''\\) if \\(e.text or ''''\\).strip\\(\\)\\)}\nprint\\(''OUT'',stats\\(a\\)\\);print\\(''REF'',stats\\(b\\)\\)\")",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git remote add:*)",
+      "Bash(git push:*)",
+      "Bash(git remote remove:*)",
+      "Bash(git ls-remote:*)",
+      "Skill(commit-commands:commit-push-pr)"
     ]
   }
 }

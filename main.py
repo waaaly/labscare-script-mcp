@@ -12,6 +12,8 @@ LabsCare LIMS 报表脚本引擎 MCP Server  v2
 """
 
 import argparse
+import sys
+from typing import Dict, Any
 from mcp.server.fastmcp import FastMCP
 from mcp import types
 
@@ -26,6 +28,7 @@ from tools.handlers import (
     handle_get_sampledata,
     handle_get_projectdata
 )
+from tools.simulate import simulate_labscare_script
 from resources.script_spec import (
     script_spec
 )
@@ -74,6 +77,9 @@ def resource_script_spec() -> str:
 def prompt_labscare_component_spec() -> str:
     return labscare_component_spec()
 
+@app.tool(name="simulate_labscare_script", description="模拟 LabsCare 报表脚本的执行结果，返回模拟数据。")
+async def tool_simulate(js_code: str, lab: str, project_id: str) -> Dict[str, Any]:
+    return await simulate_labscare_script(js_code, lab, project_id)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="LabsCare MCP Server")
@@ -86,5 +92,6 @@ if __name__ == "__main__":
         print(f"HTTP[LabsCare MCP] Streamable HTTP 启动：http://{args.host}:{args.port}/mcp")
         app.run(transport="streamable-http")
     else:
-        print("stdio[LabsCare MCP] stdio 模式启动", flush=True)
+        sys.stderr.write("stdio[LabsCare MCP] stdio 模式启动\n")
+        sys.stderr.flush()
         app.run(transport="stdio")

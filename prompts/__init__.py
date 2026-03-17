@@ -1,1 +1,0 @@
-from .labscare_component_spec import labscare_component_spec
