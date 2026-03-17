@@ -35,7 +35,8 @@
       "Bash(git push:*)",
       "Bash(git remote remove:*)",
       "Bash(git ls-remote:*)",
-      "Skill(commit-commands:commit-push-pr)"
+      "Skill(commit-commands:commit-push-pr)",
+      "Bash(git fetch:*)"
     ]
   }
 }

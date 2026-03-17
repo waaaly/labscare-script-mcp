@@ -1,3 +1,6 @@
+
+
+```markdown
 # LabsCare Script MCP Server v2
 
 一个专为 LabsCare/LIMS 报告引擎设计的 **MCP（Model Context Protocol）服务**，帮助 AI Agent（如 Grok、Claude、Cursor）自动/半自动生成 ES5 取数脚本。
@@ -10,6 +13,8 @@
 - 目标：让 Agent 一键输入报告需求 + 带批注 DOC → 输出可直接预览通过的 JS 取数脚本
 
 ## 项目结构
+
+```
 labscare-script-mcp/
 ├── main.py                 # MCP 服务器主入口（FastMCP 实现）
 ├── tools/                  # 工具实现目录
@@ -25,7 +30,9 @@ labscare-script-mcp/
 ├── docx_to_xmreport.py     # DOC 转 XML 报告结构的辅助脚本
 ├── pyproject.toml          # uv 项目依赖管理
 └── README.md
-text## 已实现的核心 Tools
+```
+
+## 已实现的核心 Tools
 
 | Tool 名                        | 功能描述                                      | 参数示例 |
 |-------------------------------|-----------------------------------------------|----------|
@@ -44,17 +51,33 @@ text## 已实现的核心 Tools
    ```bash
    git clone https://github.com/waaaly/labscare-script-mcp.git
    cd labscare-script-mcp
+   ```
 
-安装依赖（推荐使用 uv）Bashuv sync          # 或 pip install -r requirements.txt（如果后续导出）
-启动（两种模式）本地 stdio 模式（推荐 Claude Desktop / Cursor 测试）Bashpython main.py --transport stdio远程 HTTP 模式（支持 Grok、n8n、自定义 Agent）Bashpython main.py --transport http --host 0.0.0.0 --port 8000
-然后用 ngrok 暴露：ngrok http 8000
-server_url 示例：https://xxxx.ngrok.io/mcp
+2. 安装依赖（推荐使用 uv）
+   ```bash
+   uv sync          # 或 pip install -r requirements.txt（如果后续导出）
+   ```
 
+3. 启动（两种模式）
 
-如何在 AI 工具中注册
-Claude Desktop / Cursor
+   **本地 stdio 模式**（推荐 Claude Desktop / Cursor 测试）
+   ```bash
+   python main.py --transport stdio
+   ```
+
+   **远程 HTTP 模式**（支持 Grok、n8n、自定义 Agent）
+   ```bash
+   python main.py --transport http --host 0.0.0.0 --port 8000
+   ```
+   - 然后用 ngrok 暴露：`ngrok http 8000`
+   - server_url 示例：`https://xxxx.ngrok.io/mcp`
+
+## 如何在 AI 工具中注册
+
+### Claude Desktop / Cursor
 在配置文件中添加：
-JSON{
+```json
+{
   "mcpServers": {
     "labscare-script": {
       "command": "python",
@@ -62,9 +85,12 @@ JSON{
     }
   }
 }
-Grok / xAI 或其他支持 Remote MCP 的客户端
+```
+
+### Grok / xAI 或其他支持 Remote MCP 的客户端
 配置 server_url：
-JSON{
+```json
+{
   "tools": [
     {
       "type": "remote_mcp",
@@ -72,27 +98,39 @@ JSON{
     }
   ]
 }
-使用示例（直接复制到 Grok/Claude/Cursor）
-text使用 labscare-script-mcp 帮我生成一个「血常规检测报告」的取数 JS 脚本。
+```
+
+## 使用示例（直接复制到 Grok/Claude/Cursor）
+
+```
+使用 labscare-script-mcp 帮我生成一个「血常规检测报告」的取数 JS 脚本。
 
 报告类型：常规检验报告
 需要的数据源：样本基本信息 + 检测结果 + 参考范围
 特殊需求：结果异常时标红；按项目分组；输出格式符合报告引擎 {sections: [...], tables: [...]}
 
 请先调用需要的工具收集情报（如 get_labscare_sampledata、explain_labscare_field），然后生成脚本，最后如果有 simulate 工具请验证一下。
-如何添加/更新规则（知识库）
-方式1：直接编辑 JSON 文件（最简单）
-修改 knowledge/fields.json / patterns.json / diagnoses.json，保存后下次 Tool 调用自动加载（无需重启）。
-方式2：让 AI 调用 update_labscare_knowledge
-示例 Prompt：
-textt_patient_name 是患者姓名字段，在 formJs 中取值用 formJs['t_patient_name'].val
-请调用 update_labscare_knowledge 添加这个字段解释。
-Tool 会自动写入 JSON。
-计划中的功能（欢迎 PR！）
+```
 
- 带批注 DOC 自动解析 Tool（parse_annotated_doc）
- JS 脚本沙箱模拟执行 & 覆盖率验证 Tool（simulate_labscare_script）
- 更多 Resources 自动注册（示例脚本、样本 DOC）
- HTTP 模式下添加 Authorization 认证
- Dockerfile 一键部署
- 完整测试用例 & mock 接口数据
+## 如何添加/更新规则（知识库）
+
+### 方式1：直接编辑 JSON 文件（最简单）
+修改 `knowledge/fields.json` / `patterns.json` / `diagnoses.json`，保存后下次 Tool 调用自动加载（无需重启）。
+
+### 方式2：让 AI 调用 update_labscare_knowledge
+示例 Prompt：
+```
+t_patient_name 是患者姓名字段，在 formJs 中取值用 formJs['t_patient_name'].val
+请调用 update_labscare_knowledge 添加这个字段解释。
+```
+
+Tool 会自动写入 JSON。
+
+## 计划中的功能（欢迎 PR！）
+- [Y] JS 脚本沙箱模拟执行 & 覆盖率验证 Tool（simulate_labscare_script）
+- [Y] 完整测试用例 & mock 接口数据
+- [ ] 带批注 DOC 自动解析 Tool（parse_annotated_doc）
+- [ ] 更多 Resources 自动注册（示例脚本、样本 DOC）
+- [ ] HTTP 模式下添加 Authorization 认证
+- [ ] Dockerfile 一键部署
+
