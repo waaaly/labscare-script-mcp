@@ -138,7 +138,19 @@ async def simulate_labscare_script(
                 }}
                 return null;
             }}
-          
+            function getCheckBox(val){{
+                if(val){{
+                    return '<span style="font:Wingdings;font-size: 13pt">&#61694;</span>'
+                }}else {{
+                    return '<span style="font:Wingdings;font-size: 13pt">&#61551;</span>'
+                }}
+            }}
+            function getSignUrl(obj){{
+                if(obj && obj.length){{
+                    return headerUrl + obj[0].val
+                }}
+                return ''
+            }}
         """)
 
         # ==================== 3. 包裹脚本 + 捕获最后 tplData ====================
